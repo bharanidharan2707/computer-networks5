@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Network Packet Analyzer</title>
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<div class="container">
+
+    <h1>Network Packet Analyzer</h1>
+    <p>Monitor network packet information</p>
+
+    <button onclick="startCapture()">Start Capture</button>
+    <button onclick="stopCapture()">Stop Capture</button>
+
+    <h3 id="status">Capture stopped</h3>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Source IP</th>
+                <th>Destination IP</th>
+                <th>Protocol</th>
+                <th>Packet Size</th>
+            </tr>
+        </thead>
+
+        <tbody id="packetData"></tbody>
+    </table>
+
+</div>
+
+<script>
+async function startCapture() {
+    const response = await fetch("/start");
+    const data = await response.json();
+    document.getElementById("status").textContent = data.status;
+}
+
+async function stopCapture() {
+    const response = await fetch("/stop");
+    const data = await response.json();
+    document.getElementById("status").textContent = data.status;
+}
+
+async function loadPackets() {
+    try {
+        const response = await fetch("/packets");
+        const packets = await response.json();
+
+        const table = document.getElementById("packetData");
+        table.innerHTML = "";
+
+        packets.forEach(packet => {
+            const row = document.createElement("tr");
+
+            [
+                packet.source,
+                packet.destination,
+                packet.protocol,
+                packet.size + " bytes"
+            ].forEach(value => {
+                const cell = document.createElement("td");
+                cell.textContent = value;
+                row.appendChild(cell);
+            });
+
+            table.appendChild(row);
+        });
+    } catch (error) {
+        console.error("Could not load packets:", error);
+    }
+}
+
+setInterval(loadPackets, 1000);
+</script>
+
+</body>
+</html>
